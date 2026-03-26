@@ -6,14 +6,16 @@
     <title>Weather App</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-    <body class="{{ time_vibe }}"></body>
+
+<body class="{{ time_vibe }} {{ condition | lower }}">
+    
+    <div class="container">
         <h1>Weather App</h1>
         
-        <div id="history" class="history">
-            <h3>Recent Searches</h3>
-            <ul id="historyList"></ul>
-        </div>
+        <form action="/weather" method="POST">
+            <input type="text" name="city" placeholder="Enter city name..." required>
+            <button type="submit">Search</button>
+        </form>
 
         <div class="search-box">
             <input type="text" id="cityInput" placeholder="Enter city name..." autocomplete="off">
@@ -394,6 +396,6 @@
         // handle initial load
         loadFavorites();
         loadHistory();
-    </script>
-</body>
+    
+</div> </body>
 </html>

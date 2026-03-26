@@ -10,35 +10,38 @@ api_key = "40a16ed70c201e66f700607b856f39c7"
 search_history = []
 MAX_HISTORY = 10
 
-@app.route('/')
+ @app.route('/')
 def index():
-    @app.route('/')
-def index():
-    # This function should ONLY do this:
-    return render_template('index.html')
+    # This loads the blank starting page. We set a default 'day' vibe.
+    return render_template('index.html', time_vibe='day')
 
 @app.route('/weather', methods=['POST'])
 def get_weather():
-    city = request.json.get('city')
-    if not city:
-        return jsonify({'error': 'City is required'}), 400
+    city = request.form.get('city') # Use .form.get if using a standard HTML form
+    
+    # --- YOUR API CALL CODE STARTS HERE ---
+    # (Keep the lines where you fetch 'data' from OpenWeather)
+    # --- YOUR API CALL CODE ENDS HERE ---
 
-    # ... Your code to call the OpenWeather API goes here ...
-    # Once you get the 'data' from the API, put the theme logic HERE:
-
+    # 1. Extract the specific data points from the JSON
     weather_info = data['weather'][0]['main']
     sunrise = data['sys']['sunrise']
     sunset = data['sys']['sunset']
     current_time = data['dt']
 
-    # Sun/Moon Logic
+    # 2. Logic to decide if it's Day or Night
     if sunrise <= current_time <= sunset:
         vibe = "day"
     else:
         vibe = "night"
 
-    # Send everything to your HTML
-    return render_template('index.html', condition=weather_info, time_vibe=vibe, data=data)
+    # 3. Send EVERYTHING to the HTML in one go
+    return render_template('index.html', 
+                           condition=weather_info, 
+                           time_vibe=vibe, 
+                           data=data))
+
+
    
 weather_info = data['weather'][0]['main'] 
 
