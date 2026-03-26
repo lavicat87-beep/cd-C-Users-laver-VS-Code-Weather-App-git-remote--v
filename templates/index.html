@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        
+        <div id="history" class="history">
+            <h3>Recent Searches</h3>
+            <ul id="historyList"></ul>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="cityInput" placeholder="Enter city name..." autocomplete="off">
+            <button onclick="searchWeather()">Search</button>
+        </div>
+
+        <div id="options" class="options">
+            <label><input type="checkbox" id="unitToggle"> °F</label>
+            <label><input type="checkbox" id="darkToggle"> Dark Mode</label>
+            <label><input type="checkbox" id="refreshToggle"> Auto-refresh</label>
+            <button id="geoBtn">Use My Location</button>
+        </div>
+
+        <div id="error" class="error"></div>
+
+        <div id="favorites" class="favorites">
+            <h3>Favorites</h3>
+            <ul id="favoritesList"></ul>
+        </div>
+
+        <div id="weatherInfo" class="weather-info" style="display: none;">
+            <div class="weather-header">
+                <div class="weather-title">
+                <h2 id="cityName"></h2>
+                <button id="favBtn" class="fav-btn">☆</button>
+            </div>
+                <p id="description"></p>
+            </div>
+
+            <div class="weather-main">
+                <div class="temperature">
+                    <span id="temp"></span>°C
+                </div>
+                <img id="weatherIcon" src="" alt="weather icon">
+            </div>
+
+            <div class="weather-details">
+                <div class="detail">
+                    <span class="label">Feels Like</span>
+                    <span id="feelsLike"></span>°C
+                </div>
+                <div class="detail">
+                    <span class="label">Humidity</span>
+                    <span id="humidity"></span>%
+                </div>
+                <div class="detail">
+                    <span class="label">Pressure</span>
+                    <span id="pressure"></span> mb
+                </div>
+                <div class="detail">
+                    <span class="label">Wind Speed</span>
+                    <span id="windSpeed"></span> m/s
+                </div>
+                <div class="detail">
+                    <span class="label">Sunrise</span>
+                    <span id="sunrise"></span>
+                </div>
+                <div class="detail">
+                    <span class="label">Sunset</span>
+                    <span id="sunset"></span>
+                </div>
+                <div class="detail">
+                    <span class="label">UV Index</span>
+                    <span id="uvi"></span>
+                </div>
+                <div class="detail">
+                    <span class="label">Precipitation</span>
+                    <span id="precip"></span> mm
+                </div>
+            </div>
+
+            <div id="forecast" class="forecast">
+                <h3>5-Day Forecast</h3>
+                <div id="forecastList" class="forecast-list"></div>
+            </div>
+
+            <div id="hourly" class="hourly">
+                <h3>Hourly</h3>
+                <div id="hourlyList" class="hourly-list"></div>
+            </div>
+
+            <div id="map" class="map-container">
+                <h3>Map</h3>
+                <div id="mapView" class="map-view"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cityInput = document.getElementById('cityInput');
+        const unitToggle = document.getElementById('unitToggle');
+        const darkToggle = document.getElementById('darkToggle');
+        const geoBtn = document.getElementById('geoBtn');
+        
+        // Dark mode state
+        darkToggle.addEventListener('change', () => {
+            const enabled = darkToggle.checked;
+            document.body.classList.toggle('dark', enabled);
+            localStorage.setItem('darkMode', enabled);
+        });
+
+        // restore preference
+        const darkPref = localStorage.getItem('darkMode') === 'true';
+        darkToggle.checked = darkPref;
+        document.body.classList.toggle('dark', darkPref);
+
+        // Allow Enter key to search
+        cityInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchWeather();
+            }
+        });
+
+        unitToggle.addEventListener('change', function() {
+            const currentTemp = document.getElementById('temp').textContent;
+            if (currentTemp) {
+                const temp = parseInt(currentTemp, 10);
+                if (unitToggle.checked) {
+                    document.getElementById('temp').textContent = cToF(temp);
+                    document.getElementById('feelsLike').textContent = cToF(parseInt(document.getElementById('feelsLike').textContent, 10));
+                } else {
+                    document.getElementById('temp').textContent = fToC(temp);
+                    document.getElementById('feelsLike').textContent = fToC(parseInt(document.getElementById('feelsLike').textContent, 10));
+                }
+            }
+        });
+
+        let refreshInterval = null;
+        refreshToggle.addEventListener('change', () => {
+            if (refreshToggle.checked) {
+                refreshInterval = setInterval(() => {
+                    const city = cityInput.value.trim();
+                    if (city) searchWeather();
+                }, 5 * 60 * 1000); // every 5 minutes
+            } else {
+                clearInterval(refreshInterval);
+            }
+        });
+
+        geoBtn.addEventListener('click', function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    fetch(`/reverse?lat=${lat}&lon=${lon}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            cityInput.value = data.city;
+                            searchWeather();
+                        });
+                });
+            } else {
+                showError('Geolocation not supported');
+            }
+        });
+
+        function searchWeather() {
+            const city = cityInput.value.trim();
+            if (!city) {
+                showError('Please enter a city name');
+                return;
+            }
+
+            document.getElementById('error').textContent = '';
+
+            fetch('/weather', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ city: city })
+            })
+            .then(handleResponse)
+            .then(data => {
+                displayWeather(data);
+                loadFavorites();
+                fetchForecast(city);
+                fetchHourly(city);
+                updateMap(data.lat, data.lon);
+                addToHistory(city);
+            })
+            .catch(error => {
+                showError(error.message);
+            });
+        }
+
+        function handleResponse(response) {
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Error fetching weather');
+                });
+            }
+            return response.json();
+        }
+
+        function displayWeather(data) {
+            const fullCity = `${data.city}, ${data.country}`;
+            document.getElementById('cityName').textContent = fullCity;
+            document.getElementById('description').textContent = data.description.charAt(0).toUpperCase() + data.description.slice(1);
+            document.getElementById('temp').textContent = data.temperature;
+            document.getElementById('feelsLike').textContent = data.feels_like;
+            document.getElementById('humidity').textContent = data.humidity;
+            document.getElementById('pressure').textContent = data.pressure;
+            document.getElementById('windSpeed').textContent = data.wind_speed;
+            document.getElementById('sunrise').textContent = formatTime(data.sunrise);
+            document.getElementById('sunset').textContent = formatTime(data.sunset);
+            document.getElementById('uvi').textContent = data.uvi !== undefined && data.uvi !== null ? data.uvi : 'N/A';
+            document.getElementById('precip').textContent = data.precipitation || 0;
+            
+            const iconUrl = `https://openweathermap.org/img/wn/${data.icon}@4x.png`;
+            document.getElementById('weatherIcon').src = iconUrl;
+            
+            document.getElementById('weatherInfo').style.display = 'block';
+
+            // setup favorite button
+            const favBtn = document.getElementById('favBtn');
+            favBtn.classList.remove('active');
+            loadFavorites().then(favs => {
+                if (favs.includes(fullCity)) {
+                    favBtn.classList.add('active');
+                }
+            });
+            favBtn.onclick = () => {
+                if (favBtn.classList.contains('active')) {
+                    removeFavorite(fullCity);
+                    favBtn.classList.remove('active');
+                } else {
+                    addFavorite(fullCity);
+                    favBtn.classList.add('active');
+                }
+                loadFavorites();
+            };
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = message;
+            document.getElementById('weatherInfo').style.display = 'none';
+        }
+
+        function cToF(c) {
+            return Math.round((c * 9/5) + 32);
+        }
+
+        function fToC(f) {
+            return Math.round((f - 32) * 5/9);
+        }
+
+        function formatTime(unix) {
+            const d = new Date(unix * 1000);
+            return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function fetchForecast(city) {
+            fetch('/forecast', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ city })
+            })
+            .then(handleResponse)
+            .then(data => displayForecast(data.forecasts))
+            .catch(console.error);
+        }
+
+        function fetchHourly(city) {
+            fetch('/hourly', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ city })
+            })
+            .then(handleResponse)
+            .then(data => displayHourly(data.hours))
+            .catch(console.error);
+        }
+
+        function displayHourly(hours) {
+            const list = document.getElementById('hourlyList');
+            list.innerHTML = '';
+            hours.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'hourly-item';
+                div.innerHTML = `
+                    <div>${item.time}</div>
+                    <img src="https://openweathermap.org/img/wn/${item.icon}@2x.png" alt="">
+                    <div>${item.temp}°</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function updateMap(lat, lon) {
+            const mapView = document.getElementById('mapView');
+            // use OpenStreetMap iframe
+            mapView.innerHTML = `<iframe width="100%" height="200" frameborder="0" scrolling="no" 
+                src="https://www.openstreetmap.org/export/embed.html?bbox=${lon-0.5}%2C${lat-0.5}%2C${lon+0.5}%2C${lat+0.5}&layer=mapnik&marker=${lat}%2C${lon}"></iframe>`;
+        }
+
+        function addToHistory(city) {
+            fetch('/history')
+                .then(r => r.json())
+                .then(data => {
+                    const list = document.getElementById('historyList');
+                    list.innerHTML = '';
+                    data.history.forEach(item => {
+                        const li = document.createElement('li');
+                        li.textContent = item;
+                        li.addEventListener('click', () => {
+                            cityInput.value = item;
+                            searchWeather();
+                        });
+                        list.appendChild(li);
+                    });
+                });
+        }
+
+        function loadHistory() {
+            addToHistory();
+        }
+
+        function displayForecast(forecasts) {
+            const list = document.getElementById('forecastList');
+            list.innerHTML = '';
+            forecasts.forEach(item => {
+                let temp = item.temp;
+                if (unitToggle.checked) {
+                    temp = cToF(temp);
+                }
+                const div = document.createElement('div');
+                div.className = 'forecast-item';
+                div.innerHTML = `
+                    <div>${item.date}</div>
+                    <img src="https://openweathermap.org/img/wn/${item.icon}@2x.png" alt="">
+                    <div>${temp}°</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // Favorites handling
+        function loadFavorites() {
+            return fetch('/favorites')
+                .then(r => r.json())
+                .then(favs => {
+                    const list = document.getElementById('favoritesList');
+                    list.innerHTML = '';
+                    favs.forEach(city => {
+                        const li = document.createElement('li');
+                        li.textContent = city;
+                        li.addEventListener('click', () => {
+                            cityInput.value = city;
+                            searchWeather();
+                        });
+                        li.addEventListener('contextmenu', e => {
+                            e.preventDefault();
+                            removeFavorite(city);
+                        });
+                        list.appendChild(li);
+                    });
+                    return favs;
+                });
+        }
+
+        function addFavorite(city) {
+            fetch('/favorites', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ city })
+            });
+        }
+
+        function removeFavorite(city) {
+            fetch('/favorites', {
+                method: 'DELETE',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ city })
+            }).then(loadFavorites);
+        }
+
+        // handle initial load
+        loadFavorites();
+        loadHistory();
+    </script>
+</body>
+</html>
