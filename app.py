@@ -12,8 +12,34 @@ MAX_HISTORY = 10
 
 @app.route('/')
 def index():
-   # Look for where you get the 'weather' from the JSON response
-# It usually looks like this:
+    @app.route('/')
+def index():
+    # This function should ONLY do this:
+    return render_template('index.html')
+
+@app.route('/weather', methods=['POST'])
+def get_weather():
+    city = request.json.get('city')
+    if not city:
+        return jsonify({'error': 'City is required'}), 400
+
+    # ... Your code to call the OpenWeather API goes here ...
+    # Once you get the 'data' from the API, put the theme logic HERE:
+
+    weather_info = data['weather'][0]['main']
+    sunrise = data['sys']['sunrise']
+    sunset = data['sys']['sunset']
+    current_time = data['dt']
+
+    # Sun/Moon Logic
+    if sunrise <= current_time <= sunset:
+        vibe = "day"
+    else:
+        vibe = "night"
+
+    # Send everything to your HTML
+    return render_template('index.html', condition=weather_info, time_vibe=vibe, data=data)
+   
 weather_info = data['weather'][0]['main'] 
 
 # Now update your return line to this:

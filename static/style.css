@@ -376,3 +376,16 @@ body.mist, body.fog, body.haze {
 body.drizzle {
     background: linear-gradient(135deg, #485563, #29323c);
 }
+/* --- SUN THEME (Daytime) --- */
+body.day {
+    background: linear-gradient(180deg, #ffce00 0%, #ff8c00 50%, #f7b733 100%);
+    color: #222;
+    transition: background 1.5s ease-in-out;
+}
+
+/* --- MOON THEME (Nighttime) --- */
+body.night {
+    background: linear-gradient(180deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+    color: #ffffff;
+    transition: background 1.5s ease-in-out;
+}
