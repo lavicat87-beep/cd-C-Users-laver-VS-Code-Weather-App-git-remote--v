@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
+    <body class="{{ condition | lower }}">
         <h1>Weather App</h1>
         
         <div id="history" class="history">

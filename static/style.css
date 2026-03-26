@@ -361,3 +361,18 @@ button:active {
         height: 100px;
     }
 }
+/* Thunderstorm - Deep Purple/Black */
+body.thunderstorm {
+    background: linear-gradient(135deg, #1e130c, #9a0606);
+}
+
+/* Mist / Fog / Haze - Soft Grey */
+body.mist, body.fog, body.haze {
+    background: linear-gradient(135deg, #757f9a, #d7dde8);
+    color: #333; /* Darker text so it's readable on grey */
+}
+
+/* Drizzle - Light Blue/Grey */
+body.drizzle {
+    background: linear-gradient(135deg, #485563, #29323c);
+}

@@ -12,7 +12,12 @@ MAX_HISTORY = 10
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+   # Look for where you get the 'weather' from the JSON response
+# It usually looks like this:
+weather_info = data['weather'][0]['main'] 
+
+# Now update your return line to this:
+return render_template('index.html', condition=weather_info)
 
 @app.route('/weather', methods=['POST'])
 def get_weather():
