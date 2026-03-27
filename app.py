@@ -3,8 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-# --- ADD THIS LINE HERE ---
-# Make sure your key is inside 'quotes'
+
 API_KEY = '40a16ed70c201e66f700607b856f39c7' 
 
 @app.route('/')
@@ -14,13 +13,9 @@ def index():
 @app.route('/weather', methods=['POST'])
 def get_weather():
     city = request.form.get('city')
-    
-    # 1. Build the URL (Ensure API_KEY is defined at the top of your file!)
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    
-    # 2. Fetch the data
     response = requests.get(url)
-    data = response.json() # We will call this 'data' everywhere
+    data = response.json() 
 
     if response.status_code == 200:
         # 3. Logic for your "Sun and Moon" theme
@@ -41,13 +36,10 @@ def get_weather():
         # If the city is wrong or API fails
         return render_template('index.html', error="City not found", time_vibe='day')
 
-    # 2. (Your API code should go here to get 'data')
-    # ... response = requests.get(...) ...
     
     # 3. Pull the info out of the data
     weather_info = data['weather'][0]['main'] 
 
-    # 4. FINISH the function by returning the template (INDENTED!)
     return render_template('index.html', condition=weather_info, data=data)
     
     url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric'
