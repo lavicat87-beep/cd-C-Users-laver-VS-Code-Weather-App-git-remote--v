@@ -17,29 +17,32 @@ def index():
 
 @app.route('/weather', methods=['POST'])
 def get_weather():
-    city = request.form.get('city') # Use .form.get if using a standard HTML form
+    city = request.form.get('city')
     
-    # --- YOUR API CALL CODE STARTS HERE ---
-    # (Keep the lines where you fetch 'data' from OpenWeather)
-    # --- YOUR API CALL CODE ENDS HERE ---
+    # 1. BUILD the URL (API_KEY must be defined at the top of your file)
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    
+    # 2. FETCH the data (This creates the 'data' variable)
+    response = requests.get(url)
+    data = response.json()  # <--- THIS MUST HAPPEN BEFORE LINE 27
 
-    # 1. Extract the specific data points from the JSON
-    weather_info = data['weather'][0]['main']
-    sunrise = data['sys']['sunrise']
-    sunset = data['sys']['sunset']
-    current_time = data['dt']
+    # 3. USE the data
+    if response.status_code == 200:
+        # Now line 27 will work because 'data' exists!
+        weather_info = data['weather'][0]['main']
+        
+        # Sun/Moon Logic
+        sunrise = data['sys']['sunrise']
+        sunset = data['sys']['sunset']
+        current_time = data['dt']
+        vibe = "day" if sunrise <= current_time <= sunset else "night"
 
-    # 2. Logic to decide if it's Day or Night
-    if sunrise <= current_time <= sunset:
-        vibe = "day"
+        return render_template('index.html', 
+                               condition=weather_info, 
+                               time_vibe=vibe, 
+                               data=data)
     else:
-        vibe = "night"
-
-    # 3. Send EVERYTHING to the HTML in one go
-    return render_template('index.html', 
-                           condition=weather_info, 
-                           time_vibe=vibe, 
-                           data=data)
+        return render_template('index.html', error="City not found", time_vibe='day')
 
     # 2. (Your API code should go here to get 'data')
     # ... response = requests.get(...) ...
