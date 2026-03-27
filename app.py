@@ -42,17 +42,23 @@ def get_weather():
                            data=data)
 
 
-   
-weather_info = data['weather'][0]['main'] 
-
-# Now update your return line to this:
-return render_template('index.html', condition=weather_info)
 
 @app.route('/weather', methods=['POST'])
 def get_weather():
-    city = request.json.get('city')
+    # 1. Get the city name from the user
+    city = request.form.get('city') 
+    
     if not city:
         return jsonify({'error': 'City is required'}), 400
+
+    # 2. (Your API code should go here to get 'data')
+    # ... response = requests.get(...) ...
+    
+    # 3. Pull the info out of the data
+    weather_info = data['weather'][0]['main'] 
+
+    # 4. FINISH the function by returning the template (INDENTED!)
+    return render_template('index.html', condition=weather_info, data=data)
     
     url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric'
     
