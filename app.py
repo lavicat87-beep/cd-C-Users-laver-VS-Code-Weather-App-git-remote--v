@@ -14,32 +14,21 @@ def index():
 @app.route('/weather', methods=['POST'])
 def get_weather():
     city = request.form.get('city')
-    # Now line 23 will work because API_KEY is defined above!
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    
-    # ... rest of your code ...r?q={city}&appid={API_KEY}&units=metric"
-    
-    # 2. FETCH the data (This creates the 'data' variable)
     response = requests.get(url)
-    data = response.json()  # <--- THIS MUST HAPPEN BEFORE LINE 27
+    data = response.json()
 
-    # 3. USE the data
     if response.status_code == 200:
-        # Now line 27 will work because 'data' exists!
-        weather_info = data['weather'][0]['main']
+        # Determine if it's day or night for your theme
+        vibe = "day" if res_data['sys']['sunrise'] <= res_data['dt'] <= res_data['sys']['sunset'] else "night"
         
-        # Sun/Moon Logic
-        sunrise = data['sys']['sunrise']
-        sunset = data['sys']['sunset']
-        current_time = data['dt']
-        vibe = "day" if sunrise <= current_time <= sunset else "night"
-
+        # FIX: This sends the data to your HTML design
         return render_template('index.html', 
-                               condition=weather_info, 
-                               time_vibe=vibe, 
-                               data=data)
+                               data=res_data, 
+                               condition=res_data['weather'][0]['main'], 
+                               time_vibe=vibe)
     else:
-        return render_template('index.html', error="City not found", time_vibe='day')
+        return render_template('index.html', error="City not found")
 
     # 2. (Your API code should go here to get 'data')
     # ... response = requests.get(...) ...
