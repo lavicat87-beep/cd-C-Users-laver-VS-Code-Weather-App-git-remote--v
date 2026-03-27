@@ -41,16 +41,6 @@ def get_weather():
                            time_vibe=vibe, 
                            data=data)
 
-
-
-@app.route('/weather', methods=['POST'])
-def get_weather():
-    # 1. Get the city name from the user
-    city = request.form.get('city') 
-    
-    if not city:
-        return jsonify({'error': 'City is required'}), 400
-
     # 2. (Your API code should go here to get 'data')
     # ... response = requests.get(...) ...
     
