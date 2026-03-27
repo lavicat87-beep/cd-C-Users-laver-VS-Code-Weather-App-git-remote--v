@@ -9,18 +9,22 @@
 
 <body class="{{ time_vibe }} {{ condition | lower }}">
     
-    <div class="container">
-        <h1>Weather App</h1>
-        
-        <form action="/weather" method="POST">
-            <input type="text" name="city" placeholder="Enter city name..." required>
-            <button type="submit">Search</button>
-        </form>
+<div class="container">
+    <h1>Weather App</h1>
+    
+    <form action="/weather" method="POST">
+        <input type="text" name="city" placeholder="Enter city name..." required>
+        <button type="submit">Search</button>
+    </form>
 
-        <div class="search-box">
-            <input type="text" id="cityInput" placeholder="Enter city name..." autocomplete="off">
-            <button onclick="searchWeather()">Search</button>
-        </div>
+    {% if data %}
+    <div class="results">
+        <h2>{{ data['name'] }}</h2>
+        <p class="temp">{{ data['main']['temp'] }}°C</p>
+        <p class="condition">{{ condition }}</p>
+    </div>
+    {% endif %}
+</div>
 
         <div id="options" class="options">
             <label><input type="checkbox" id="unitToggle"> °F</label>
