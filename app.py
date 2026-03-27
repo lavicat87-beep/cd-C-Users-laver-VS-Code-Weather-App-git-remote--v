@@ -10,7 +10,7 @@ api_key = "40a16ed70c201e66f700607b856f39c7"
 search_history = []
 MAX_HISTORY = 10
 
- @app.route('/')
+@app.route('/')
 def index():
     # This loads the blank starting page. We set a default 'day' vibe.
     return render_template('index.html', time_vibe='day')
@@ -160,3 +160,8 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+if __name__ == "__main__":
+    # This tells the app to use the Port Render gives it, or 5000 as a backup
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
