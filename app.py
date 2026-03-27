@@ -39,7 +39,7 @@ def get_weather():
     return render_template('index.html', 
                            condition=weather_info, 
                            time_vibe=vibe, 
-                           data=data))
+                           data=data)
 
 
    
