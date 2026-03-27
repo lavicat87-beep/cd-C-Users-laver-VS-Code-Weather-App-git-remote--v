@@ -45,14 +45,11 @@ def get_weather():
    
 weather_info = data['weather'][0]['main'] 
 
-@app.route('/')
-def index():
-    # This MUST be indented (pushed in) to be part of the 'index' function
-    return render_template('index.html') 
+# Now update your return line to this:
+return render_template('index.html', condition=weather_info)
 
 @app.route('/weather', methods=['POST'])
 def get_weather():
-    # Everything inside here must also be indented
     city = request.json.get('city')
     if not city:
         return jsonify({'error': 'City is required'}), 400
