@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import requests
 
 app = Flask(__name__)
@@ -14,21 +14,32 @@ def index():
 @app.route('/weather', methods=['POST'])
 def get_weather():
     city = request.form.get('city')
+    
+    # 1. Build the URL (Ensure API_KEY is defined at the top of your file!)
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    
+    # 2. Fetch the data
     response = requests.get(url)
-    data = response.json()
+    data = response.json() # We will call this 'data' everywhere
 
     if response.status_code == 200:
-        # Determine if it's day or night for your theme
-        vibe = "day" if res_data['sys']['sunrise'] <= res_data['dt'] <= res_data['sys']['sunset'] else "night"
+        # 3. Logic for your "Sun and Moon" theme
+        # We check the current time (dt) against sunrise and sunset
+        sunrise = data['sys']['sunrise']
+        sunset = data['sys']['sunset']
+        current_time = data['dt']
         
-        # FIX: This sends the data to your HTML design
+        vibe = "day" if sunrise <= current_time <= sunset else "night"
+        
+        # 4. SEND TO HTML
+        # This matches the {{ data }}, {{ condition }}, and {{ time_vibe }} in your index.html
         return render_template('index.html', 
-                               data=res_data, 
-                               condition=res_data['weather'][0]['main'], 
+                               data=data, 
+                               condition=data['weather'][0]['main'], 
                                time_vibe=vibe)
     else:
-        return render_template('index.html', error="City not found")
+        # If the city is wrong or API fails
+        return render_template('index.html', error="City not found", time_vibe='day')
 
     # 2. (Your API code should go here to get 'data')
     # ... response = requests.get(...) ...
