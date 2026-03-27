@@ -1,26 +1,23 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request
 import requests
-import os
-from datetime import datetime
 
 app = Flask(__name__)
-# Load API key from environment variable for production deployment
-api_key = "40a16ed70c201e66f700607b856f39c7"
-# simple in-memory search history (could be persisted to file)
-search_history = []
-MAX_HISTORY = 10
+
+# --- ADD THIS LINE HERE ---
+# Make sure your key is inside 'quotes'
+API_KEY = '40a16ed70c201e66f700607b856f39c7' 
 
 @app.route('/')
 def index():
-    # This loads the blank starting page. We set a default 'day' vibe.
     return render_template('index.html', time_vibe='day')
 
 @app.route('/weather', methods=['POST'])
 def get_weather():
     city = request.form.get('city')
-    
-    # 1. BUILD the URL (API_KEY must be defined at the top of your file)
+    # Now line 23 will work because API_KEY is defined above!
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
+    
+    # ... rest of your code ...r?q={city}&appid={API_KEY}&units=metric"
     
     # 2. FETCH the data (This creates the 'data' variable)
     response = requests.get(url)
