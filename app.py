@@ -10,13 +10,20 @@ API_KEY = '40a16ed70c201e66f700607b856f39c7'
 def index():
     return render_template('index.html', time_vibe='day')
 
-@app.route('/weather', methods=['POST'])
+# --- FIND THIS SECTION ---
+@app.route('/weather', methods=['GET', 'POST']) # <--- ADD 'methods' HERE
 def get_weather():
-    city = request.form.get('city')
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
-    response = requests.get(url)
-    data = response.json() 
+    if request.method == 'POST':
+        city = request.form.get('city')
+        # ... (your API fetching code stays here) ...
+        return render_template('index.html', data=data, time_vibe=vibe)
+    
+    # If someone just types the URL, send them back to the home page
+    return redirect('/') 
 
+# This usually stays at the very bottom
+if __name__ == '__main__':
+    app.run(debug=True)
     if response.status_code == 200:
         # 3. Logic for your "Sun and Moon" theme
         # We check the current time (dt) against sunrise and sunset

@@ -12,10 +12,9 @@
 <div class="container">
     <h1>Weather App</h1>
     
-    <form action="/weather" method="POST">
-        <input type="text" name="city" placeholder="Enter city name..." required>
-        <button type="submit">Search</button>
-    </form>
+    <form action="/weather" method="POST">  <input type="text" name="city" id="cityInput" placeholder="Enter city name..." required>
+    <button type="submit">Search</button>
+</form>
 
     {% if data %}
     <div class="results">
